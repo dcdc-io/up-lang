@@ -3,7 +3,7 @@ import { s3StaticSite } from "@up-sdk/provider-aws"
 asset s3StaticSite site = "./staticsite"
 
 // lifecycle events
-on ship = context {
+on up = context {
     if (context.new) {
         site.up()
         exit
@@ -17,6 +17,10 @@ on ship = context {
 
 on site:down = {
     wait(1m):then = {
-        alarm()
+        alarmSiteIsDown()
     }
+}
+
+on site:up = {
+    notifySiteIsUp()
 }
