@@ -1,0 +1,35 @@
+// import packages
+import { member } from "package"
+
+// import assets
+asset type name = "path" | reference
+
+// convert package to asset
+asset name = member | reference with asset presentation
+
+// event handlers (anonymous)
+on signal = arg0, arg1, arg2 {
+    // handler logic
+}
+
+on reference:signal = arg0, arg1, arg2 {
+    // handler logic
+}
+
+// event handlers (named)
+on reference:signal named = arg0, arg1, arg2 {
+    // handler logic
+}
+
+// event handler removal
+named = off
+
+callable(arg0):signal = {
+    // handler logic
+}
+
+// immutable
+val name = value
+
+// mutable
+mut name = value

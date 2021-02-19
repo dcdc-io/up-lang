@@ -1,0 +1,22 @@
+import { s3StaticSite } from "@up-sdk/provider-aws"
+
+asset s3StaticSite site = "./staticsite"
+
+// lifecycle events
+on ship = context {
+    if (context.new) {
+        site.up()
+        exit
+    }
+    if (context.migrate) {
+        site.down()
+        site.up()
+        exit
+    }
+}
+
+on site:down = {
+    wait(1m):then = {
+        alarm()
+    }
+}
