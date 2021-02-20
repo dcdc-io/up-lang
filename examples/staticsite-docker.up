@@ -1,0 +1,30 @@
+import { docker } from "@up-sdk/provider-docker"
+
+asset site = dockerfile {
+    FROM nginx:alpine
+    
+    COPY ./staticsite /usr/share/nginx/html
+} |> docker.build |> docker.assetFromLocalImage .image
+
+// lifecycle events
+on up = context {
+    if (context.new) {
+        site.up()
+        exit
+    }
+    if (context.migrate) {
+        site.down()
+        site.up()
+        exit
+    }
+}
+
+on site:down = {
+    wait(1m):then = {
+        alarmSiteIsDown()
+    }
+}
+
+on site:up = {
+    notifySiteIsUp()
+}
