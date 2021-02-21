@@ -1,4 +1,5 @@
 import { promises } from "fs"
+import { parse } from "./parser";
 
 const { readFile } = promises;
 
@@ -20,7 +21,7 @@ export class Node {
     async parseAndMerge(source: {
         id: string, code: string
     }) {
-        
+        const parseResult = await parse(source.code)
     }
 }
 export class Program {
@@ -33,7 +34,7 @@ export class Program {
         return new Program()
     }
     async loadFile(filename: string) {
-        this.root.parseAndMerge({
+        await this.root.parseAndMerge({
             id: filename,
             code: (await readFile(filename)).toString()
         })
