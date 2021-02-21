@@ -3,7 +3,7 @@ dialect { dockerfile } from docker
 
 asset<dockerImageAsset> site
 
-let monitorDockerContainer context = {
+let monitorDockerContainer = context => {
     while true {
         val request = await fetch "http://localhost:8080"
         val status = request.status
@@ -16,7 +16,7 @@ let monitorDockerContainer context = {
 } emits fault(int status)
 
 // lifecycle events
-on up = context {
+:up = context => {
     site = dockerfile {
         FROM nginx:alpine
         
@@ -25,13 +25,13 @@ on up = context {
         |> docker.saveImage output.image, env.DOCKER_OUT_FILE or nothing
         |> docker.assetFromLocalImage output.image
     
-    on site:down = {
+    site:down = {
         wait(1m):then = {
             alarmSiteIsDown()
         }
     }
 
-    on site:up = context {
+    site:up = context => {
         notifySiteIsUp()
         spawn {
             val monitor = monitorDockerContainer(context) {

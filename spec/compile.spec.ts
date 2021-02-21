@@ -10,18 +10,18 @@ describe('up compiler', () => {
                 // remove test data
                 await rmdir("./__TEST__/docker", { recursive: true }).catch(() => { })
 
-                const stack = await up.loadFile("../examples/staticsite-docker.up")
+                const program = await up.load("../examples/staticsite-docker.up")
 
-                expect(stack).toBeDefined()
+                expect(program).toBeDefined()
 
-                stack.configure({
+                program.configure({
                     env: {
                         "DOCKER_OUT_FILE": "./__TEST__/docker/output.tar.gz"
                     }
                 })
 
                 // build docker image
-                await stack.signal("up", {})
+                await program.signal("up", {})
                 const files = readdir("./__TEST__/docker")
 
                 expect(files).toBe(["output.tar.gz"])

@@ -1,20 +1,47 @@
+import { promises } from "fs"
+
+const { readFile } = promises;
+
 export default {
-    async loadFile(filename: string) {
-        return Stack.create()
+    async load(filename: string) {
+        const program = Program.create()
+        await program.loadFile(filename)
+        return program
     }
 }
 
-export class Stack {
+export class Node {
     private constructor() {
 
     }
-    static create(): Stack {
-        return new Stack()
+    static emptyNode():Node {
+        return new Node()
     }
-    async configure(configurator: any) {
+    async parseAndMerge(source: {
+        id: string, code: string
+    }) {
+        
+    }
+}
+export class Program {
+    config: { env?: Record<string, string> } = {}
+    root: Node = Node.emptyNode()
+    private constructor() {
 
     }
-    async signal(string: signal, context: any) {
-
+    static create(): Program {
+        return new Program()
+    }
+    async loadFile(filename: string) {
+        this.root.parseAndMerge({
+            id: filename,
+            code: (await readFile(filename)).toString()
+        })
+    }
+    async configure(configurator: { env: Record<string, string> }) {
+        this.config = configurator
+    }
+    async signal(name: string, context: any) {
+        this.root.nodes.filter(node => node.name === name)
     }
 }
