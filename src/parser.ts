@@ -16,7 +16,8 @@ const tokens = {
     CommentStart: token("CommentStart", "//"),
     Import: token("Import", "import"),
     From: token("From", "from"),
-    NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/)
+    NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/),
+    Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/)
 }
 
 type Comment = {
@@ -55,11 +56,7 @@ export const statements = {
         tokens.NameOrIdentifier
     ),
     stringLiteral: rule(
-        either(
-            rule(
-                tokens.QuoteSingle, tokens.
-            )
-        )
+        tokens.Quoted
     )
 }
 
