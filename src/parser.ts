@@ -17,7 +17,11 @@ const tokens = {
     Import: token("Import", "import"),
     From: token("From", "from"),
     NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/),
-    Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/)
+    Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/),
+    LeftCurly: token("LeftCurly", "{"),
+    RightCurly: token("RightCurly", "}"),
+    Comma: token("Comma", ","),
+    Colon: token("Colon", ":")
 }
 
 type Comment = {
@@ -25,7 +29,10 @@ type Comment = {
 }
 
 export const statements = {
-    statement: rule(() => statements.comment),
+    statement: rule(
+        tokens.WhitespaceAnyMultiline,
+        () => statements.comment
+    ),
     comment: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.CommentStart,
@@ -53,9 +60,45 @@ export const statements = {
         () => statements.stringLiteral
     ),
     name: rule(
+        tokens.WhitespaceAnyMultiline,
         tokens.NameOrIdentifier
     ),
+    destructuredNames: rule(
+        tokens.WhitespaceAnyMultiline,
+        tokens.LeftCurly,
+        tokens.WhitespaceAnyMultiline,
+        either(
+            rule(
+                tokens.NameOrIdentifier,
+                tokens.WhitespaceAnyMultiline,
+                tokens.Colon,
+                () => statements.destructuredNames
+            ),
+            rule(
+                tokens.NameOrIdentifier
+            )
+        ),
+        many(
+            tokens.WhitespaceAnyMultiline,
+            tokens.Comma,
+            tokens.WhitespaceAnyMultiline,
+            either(
+                rule(
+                    tokens.NameOrIdentifier,
+                    tokens.WhitespaceAnyMultiline,
+                    tokens.Colon,
+                    () => statements.destructuredNames
+                ),
+                rule(
+                    tokens.NameOrIdentifier
+                )
+            )
+        ),
+        tokens.WhitespaceAnyMultiline,
+        tokens.RightCurly
+    ),
     stringLiteral: rule(
+        tokens.WhitespaceAnyMultiline,
         tokens.Quoted
     )
 }
