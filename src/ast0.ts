@@ -1,11 +1,19 @@
-abstract class type {
+namespace AST0 {
+    type SourceLocation = {
+        index: number
+    }
+    interface Node<T> {
+        type: string
+        location: SourceLocation
+        raw: string
+        value: T
+    }
+    
+    class Name extends Node<string> {
 
-}
+    }
 
-type name = {
-    type: "name"
-} & location
-
-export const ast0 = {
-    name: () => {}
+    export const emitName = (x:any):Name => {
+        throw "no imp"
+    }
 }

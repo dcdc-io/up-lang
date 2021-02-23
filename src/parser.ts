@@ -71,7 +71,22 @@ export const statements = {
                 tokens.NameOrIdentifier
             )
         )
-    ),
+    ).yields((r, y) => {
+        const parts = r.tokens.filter(token => token.name === "NameOrIdentifier").map(token => {
+            return {
+                location: { index: token.result.startloc },
+                type: "name_part",
+                raw: token.result.value,
+                value: token.result.value
+            }
+        })
+        return {
+            location: parts[0].location,
+            type: "name",
+            raw: r.tokens.map(token => token.result.value).join(""),
+            value: parts
+        }
+    }),
     destructuredNames: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.LeftCurly,
