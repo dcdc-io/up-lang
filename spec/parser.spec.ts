@@ -67,10 +67,11 @@ describe('parser', () => {
         }])
     })
 
-    xit('can parse import statements', () => {
+    it('can parse import statements', () => {
         const result = parse("import { foo } from 'bar'")(
             statements.import
         )
+        // ?
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "import",
