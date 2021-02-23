@@ -1,4 +1,5 @@
 import { Input, IRule, Result, Tibu } from "tibu"
+import { unesc } from "./utility";
 
 const { parse: tibu, rule, many, either, all, optional, token } = Tibu
 
@@ -124,7 +125,15 @@ export const statements = {
     stringLiteral: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.Quoted
-    )
+    ).yields((r, y) => {
+        const token = r.tokens.find(token => token.name === "Quoted")
+        return {
+            location: { index: token.result.startloc },
+            type: "string",
+            raw: token.result.value,
+            value: unesc(token.result.value.substr(1, token.result.value.length - 2))
+        }
+    })
 }
 
 // export const parse = (code: string) => {

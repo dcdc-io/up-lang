@@ -17,6 +17,23 @@ describe('parser', () => {
     })
 
     it('can parse names', () => {
+        const result = parse("hello")(
+            statements.name
+        )
+        expect(result).toStrictEqual([{
+            location: { index: 0 },
+            type: "name",
+            raw: "hello",
+            value: [{
+                location: { index: 0 },
+                type: "name_part",
+                raw: "hello",
+                value: "hello",
+            }]
+        }])
+    })
+
+    it('can parse dotted names', () => {
         const result = parse("hello.world")(
             statements.name
         )
@@ -35,6 +52,18 @@ describe('parser', () => {
                 raw: "world",
                 value: "world",
             }]
+        }])
+    })
+
+    it('can parse string literals', () => {
+        const result = parse("'he\\tllo'")(
+            statements.stringLiteral
+        )
+        expect(result).toStrictEqual([{
+            location: { index: 0 },
+            type: "string",
+            raw: "'he\\tllo'",
+            value: "he\tllo"
         }])
     })
 
