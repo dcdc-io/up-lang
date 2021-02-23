@@ -1,7 +1,7 @@
 import { Tibu } from "tibu"
 import { statements } from '../src/parser';
 
-const parse = code => (...rules:Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
+const parse = code => (...rules: Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
 
 describe('parser', () => {
     it('can parse one line comments', () => {
@@ -16,10 +16,32 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse import statements', () => {
+    it('can parse names', () => {
+        const result = parse("hello.world")(
+            statements.name
+        )
+        expect(result).toStrictEqual([{
+            location: { index: 0 },
+            type: "name",
+            raw: "hello.world",
+            value: [{
+                location: { index: 0 },
+                type: "name_part",
+                raw: "hello",
+                value: "hello",
+            }, {
+                location: { index: 6 },
+                type: "name_part",
+                raw: "world",
+                value: "world",
+            }]
+        }])
+    })
+
+    xit('can parse import statements', () => {
         const result = parse("import { foo } from 'bar'")(
             statements.import
-        )
+        ) // ?
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "import",

@@ -21,7 +21,8 @@ const tokens = {
     LeftCurly: token("LeftCurly", "{"),
     RightCurly: token("RightCurly", "}"),
     Comma: token("Comma", ","),
-    Colon: token("Colon", ":")
+    Colon: token("Colon", ":"),
+    Dot: token("Dot", ".")
 }
 
 type Comment = {
@@ -61,7 +62,15 @@ export const statements = {
     ),
     name: rule(
         tokens.WhitespaceAnyMultiline,
-        tokens.NameOrIdentifier
+        tokens.NameOrIdentifier,
+        optional(
+            many(
+                tokens.WhitespaceAnyMultiline,
+                tokens.Dot,
+                tokens.WhitespaceAnyMultiline,
+                tokens.NameOrIdentifier
+            )
+        )
     ),
     destructuredNames: rule(
         tokens.WhitespaceAnyMultiline,
