@@ -56,7 +56,7 @@ describe('parser', () => {
     })
 
     it('can parse destructered names', () => {
-        const result = parse("{ foo { bar, bar { a, b ,c } } }")(
+        const result = parse("{ foo { bar } }")(
             statements.destructuredNames
         )
 
@@ -64,14 +64,31 @@ describe('parser', () => {
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "destructuredName",
-            raw: "{ foo { bar, fizz } }",
-            value: {
-                type: "name",
+            raw: "{ foo { bar } }",
+            value: [{
+                location: {
+                    "index": 2,
+                },
+                raw: "foo",
+                type: "destructuredName_name",
+                value: "foo",
+            }, {
+                location: {
+                    index: 6,
+                },
+                raw: "{ bar }",
+                type: "destructuredName",
                 value: [{
-
-                }]
-            }
-        }])
+                    "location": {
+                        "index": 8,
+                    },
+                    "raw": "bar",
+                    "type": "destructuredName_name",
+                    "value": "bar",
+                }],
+            }]
+        }]
+        )
     })
 
     it('can parse string literals', () => {
@@ -90,7 +107,7 @@ describe('parser', () => {
         const result = parse("import { foo } from 'bar'")(
             statements.import
         )
-        
+
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "import",
