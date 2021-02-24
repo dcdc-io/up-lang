@@ -96,7 +96,7 @@ export const statements = {
             rule(
                 tokens.NameOrIdentifier,
                 tokens.WhitespaceAnyMultiline,
-                tokens.Colon,
+                //tokens.Colon,
                 () => statements.destructuredNames
             ),
             rule(
@@ -111,7 +111,7 @@ export const statements = {
                 rule(
                     tokens.NameOrIdentifier,
                     tokens.WhitespaceAnyMultiline,
-                    tokens.Colon,
+                    //tokens.Colon,
                     () => statements.destructuredNames
                 ),
                 rule(
@@ -121,7 +121,57 @@ export const statements = {
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
-    ),
+    ).yields((r, y) => {
+        y // ?
+        return r.tokens.reduce((previous: any, current, index) => {
+            switch (current.name) {
+                case "LeftCurly":
+                    const part = {
+                        location: { index: current.result.startloc },
+                        type: "destructuredName",
+                        value: [],
+                        raw: r.tokens.slice(index).reduce((previous, current) => {
+                            if (previous.term) {
+                                return previous
+                            }
+                            if (current.name === "RightCurly") {
+                                previous.count -= 1
+                            }
+                            if (current.name === "LeftCurly") {
+                                previous.count += 1
+                            }
+                            if (previous.count === 0) {
+                                previous.term = true
+                                return previous
+                            }
+                            previous.acc.push(current)
+                            return previous
+                        }, { count: 1, term: false, acc: [] }).acc.map(token => token.result.value)
+                            .join("")
+                            .trimEnd(),
+                        ...(() => previous ? { parent: previous } : undefined)()
+                    }
+                    if (previous) {
+                        previous.value.push(part)
+                    }
+                    part //
+                    return part
+                case "NameOrIdentifier":
+                    previous.value.push({
+                        location: { index: current.result.startloc },
+                        type: "destructuredName_name",
+                        value: current.result.value,
+                        raw: current.result.value,
+                        parent: previous
+                    })
+                    return previous
+                case "RightCurly":
+                    return previous.parent || previous
+                default:
+                    return previous
+            }
+        }, false)
+    }),
     stringLiteral: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.Quoted
