@@ -114,9 +114,11 @@ describe('parser', () => {
     })
 
     it('can parse import statements', () => {
-        const result = parse("import { foo } from 'bar'")(
+        let result = parse("import { foo } from 'bar'")(
             statements.import
         )
+
+        deleteProperty(result, "parent")
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
@@ -139,6 +141,46 @@ describe('parser', () => {
                     type: "string",
                     raw: "'bar'",
                     value: "bar"
+                }
+            }
+        }])
+    })
+
+    it('can parse dialect statements', () => {
+        let result = parse("dialect { dockerfile } from docker")(
+            statements.dialect
+        )
+
+        deleteProperty(result, "parent")
+
+        expect(result).toStrictEqual([{
+            location: { index: 0 },
+            type: "dialect",
+            raw: "dialect { dockerfile } from docker",
+            value: {
+                dialect: {
+                    location: { index: 8 },
+                    type: "destructuredName",
+                    raw: "{ dockerfile }",
+                    value: [{
+                        location: {
+                            "index": 10,
+                        },
+                        raw: "dockerfile",
+                        type: "destructuredName_name",
+                        value: "dockerfile",
+                    }]
+                },
+                from: {
+                    location: { index: 28 },
+                    type: "name",
+                    raw: "docker",
+                    value: [{
+                        location: { index: 28 },
+                        type: "name_part",
+                        raw: "docker",
+                        value: "docker",
+                    }]
                 }
             }
         }])

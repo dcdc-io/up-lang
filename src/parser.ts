@@ -39,6 +39,7 @@ const tokens = {
     UntilEndOfLine: token("UntilEndOfLine", /.*$/m),
     CommentStart: token("CommentStart", "//"),
     Import: token("Import", "import"),
+    Dialect: token("Dialect", "dialect"),
     From: token("From", "from"),
     NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/),
     Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/),
@@ -74,7 +75,6 @@ export const statements = {
     import: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.Import,
-        tokens.WhitespaceAnyMultiline,
         either(
             tag("import:name", () => rule(statements.name)),
             tag("import:name", () => rule(statements.destructuredNames))
@@ -84,12 +84,12 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tag("import:libname", () => rule(statements.stringLiteral))
     ).yields((r, y) => {
-        const names = flat(firstTagged("import:name", y).value).first() // ?
+        const names = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
         const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
         return {
             location: { index: 0 },
             type: "import",
-            raw: r.tokens.map(token => token.result.value).join("") + libname.raw,
+            raw: r.tokens.slice(0, 3).map(token => token.result.value).join("") + names.raw + r.tokens.slice(2).map(token => token.result.value).join("") + libname.raw,
             value: {
                 import: names,
                 source: libname
@@ -119,7 +119,7 @@ export const statements = {
         return {
             location: parts[0].location,
             type: "name",
-            raw: r.tokens.map(token => token.result.value).join(""),
+            raw: r.tokens.map(token => token.result.value).join("").trim(),
             value: parts
         }
     }),
@@ -188,7 +188,6 @@ export const statements = {
                     if (previous) {
                         previous.value.push(part)
                     }
-                    part //
                     return part
                 case "NameOrIdentifier":
                     previous.value.push({
@@ -216,6 +215,29 @@ export const statements = {
             type: "string",
             raw: token.result.value,
             value: unesc(token.result.value.substr(1, token.result.value.length - 2))
+        }
+    }),
+    dialect: rule(
+        tokens.WhitespaceAnyMultiline,
+        tokens.Dialect,
+        either(
+            tag("dialect:name", () => rule(statements.name)),
+            tag("dialect:name", () => rule(statements.destructuredNames))
+        ),
+        tokens.WhitespaceAnyMultiline,
+        tokens.From,
+        tag("dialect:from", () => rule(statements.name))
+    ).yields((r, y) => {
+        const dialectname = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
+        const dialectfrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
+        return {
+            location: { index: r.tokens.first().result.startloc },
+            type: "dialect",
+            raw: r.tokens.slice(0, 3).map(token => token.result.value).join(""),
+            value: {
+                dialect: dialectname,
+                from: dialectfrom
+            }
         }
     })
 }
