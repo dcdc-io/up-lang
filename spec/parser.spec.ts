@@ -3,6 +3,15 @@ import { statements } from '../src/parser';
 
 const parse = code => (...rules: Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
 
+const deleteProperty = (obj: any, removeKey: string): any => {
+    delete obj[removeKey]
+    if (typeof obj === "object") {
+        for (const key in obj) {
+            deleteProperty(obj[key], removeKey)
+        }
+    }
+}
+
 describe('parser', () => {
     it('can parse one line comments', () => {
         const result = parse("// hello world")(
@@ -56,11 +65,12 @@ describe('parser', () => {
     })
 
     it('can parse destructered names', () => {
-        const result = parse("{ foo { bar } }")(
+        let result = parse("{ foo { bar } }")(
             statements.destructuredNames
         )
 
-        result // ?+
+        deleteProperty(result[0], "parent")
+
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "destructuredName",
