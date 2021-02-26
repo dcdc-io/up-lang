@@ -1,4 +1,5 @@
 import { Input, IRule, Result, Tibu } from "tibu"
+import { flattenDiagnosticMessageText } from "typescript";
 import { unesc } from "./utility";
 
 const { parse: tibu, rule, many, either, all, optional, token } = Tibu
@@ -8,6 +9,28 @@ const utility = {
         let result: Result;
         const matches = input.source.match(/\r\n|\r|\n/gm)
     }
+}
+declare global {
+    interface Array<T> {
+        first(): T | undefined
+    }
+}
+Array.prototype.first = function <T>(): T | undefined {
+    return this.length > 0 ? this[0] : undefined
+}
+
+const flat = <T>(arr: Array<T>): T[] => {
+    return arr.reduce((acc, value) => acc.concat(value), [])
+}
+
+const tag = (tag: string, ruleToTag: () => IRule): IRule => {
+    return rule(ruleToTag).yields((r, y) => {
+        return { tag, value: y }
+    })
+}
+
+const firstTagged = (tag: string, y: any[]): any => {
+    return flat<any>(y.filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
 }
 
 const tokens = {
@@ -53,14 +76,26 @@ export const statements = {
         tokens.Import,
         tokens.WhitespaceAnyMultiline,
         either(
-            () => statements.name,
-            () => statements.destructuredNames
+            tag("import:name", () => rule(statements.name)),
+            tag("import:name", () => rule(statements.destructuredNames))
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.From,
         tokens.WhitespaceAnyMultiline,
-        () => statements.stringLiteral
-    ),
+        tag("import:libname", () => rule(statements.stringLiteral))
+    ).yields((r, y) => {
+        const names = flat(firstTagged("import:name", y).value).first() // ?
+        const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
+        return {
+            location: { index: 0 },
+            type: "import",
+            raw: r.tokens.map(token => token.result.value).join("") + libname.raw,
+            value: {
+                import: names,
+                source: libname
+            }
+        }
+    }),
     name: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.NameOrIdentifier,
@@ -122,7 +157,6 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
     ).yields((r, y) => {
-        y // ?
         return r.tokens.reduce((previous: any, current, index) => {
             switch (current.name) {
                 case "LeftCurly":

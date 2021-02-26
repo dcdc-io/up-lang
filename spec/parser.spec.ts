@@ -125,11 +125,11 @@ describe('parser', () => {
             value: {
                 import: {
                     location: { index: 7 },
-                    type: "destructuredNames",
+                    type: "destructuredName",
                     raw: "{ foo }",
                     value: [{
                         location: { index: 9 },
-                        type: "name",
+                        type: "destructuredName_name",
                         raw: "foo",
                         value: "foo"
                     }]
