@@ -20,7 +20,7 @@ Array.prototype.first = function <T>(): T | undefined {
 }
 
 const flat = <T>(arr: Array<T>): T[] => {
-    return arr.reduce((acc, value) => acc.concat(value), [])
+    return arr.reduce((acc, value) => acc.concat(value as any), [])
 }
 
 const tag = (tag: string, ruleToTag: () => IRule): IRule => {
@@ -64,12 +64,12 @@ export const statements = {
         tokens.CommentStart,
         tokens.WhitespaceAny,
         tokens.UntilEndOfLine
-    ).yields((r, y) => {
+    ).yields((r, y, f) => {
         return {
             location: { index: r.tokens[0].result.startloc },
             type: "comment",
             value: r.one("UntilEndOfLine"),
-            raw: r.tokens.map(t => t.result.value).join("")
+            raw: f.trim() // r.tokens.map(t => t.result.value).join("")
         }
     }),
     import: rule(
@@ -130,9 +130,7 @@ export const statements = {
         either(
             rule(
                 tokens.NameOrIdentifier,
-                tokens.WhitespaceAnyMultiline,
-                //tokens.Colon,
-                () => statements.destructuredNames
+                tag("destructuredName:first", () => rule(statements.destructuredNames))
             ),
             rule(
                 tokens.NameOrIdentifier
@@ -145,9 +143,7 @@ export const statements = {
             either(
                 rule(
                     tokens.NameOrIdentifier,
-                    tokens.WhitespaceAnyMultiline,
-                    //tokens.Colon,
-                    () => statements.destructuredNames
+                    tag("destructuredName:other", () => rule(statements.destructuredNames))
                 ),
                 rule(
                     tokens.NameOrIdentifier
@@ -156,7 +152,9 @@ export const statements = {
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
-    ).yields((r, y) => {
+    ).yields((r, y, f) => {
+        y // ?
+        //firstTagged("destructuredName:first", y) // ?
         return r.tokens.reduce((previous: any, current, index) => {
             switch (current.name) {
                 case "LeftCurly":
@@ -164,25 +162,7 @@ export const statements = {
                         location: { index: current.result.startloc },
                         type: "destructuredName",
                         value: [],
-                        raw: r.tokens.slice(index).reduce((previous, current) => {
-                            if (previous.term) {
-                                return previous
-                            }
-                            if (current.name === "RightCurly") {
-                                previous.count -= 1
-                            }
-                            if (current.name === "LeftCurly") {
-                                previous.count += 1
-                            }
-                            if (previous.count === 0) {
-                                previous.term = true
-                                return previous
-                            }
-                            previous.acc.push(current)
-                            return previous
-                        }, { count: 1, term: false, acc: [] }).acc.map(token => token.result.value)
-                            .join("")
-                            .trimEnd(),
+                        raw: f.trim(),
                         ...(() => previous ? { parent: previous } : undefined)()
                     }
                     if (previous) {
@@ -192,7 +172,7 @@ export const statements = {
                 case "NameOrIdentifier":
                     previous.value.push({
                         location: { index: current.result.startloc },
-                        type: "destructuredName_name",
+                        type: "name",
                         value: current.result.value,
                         raw: current.result.value,
                         parent: previous
@@ -209,7 +189,7 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tokens.Quoted
     ).yields((r, y) => {
-        const token = r.tokens.find(token => token.name === "Quoted")
+        const token = r.tokens.find(token => token.name === "Quoted")!
         return {
             location: { index: token.result.startloc },
             type: "string",
@@ -227,13 +207,13 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tokens.From,
         tag("dialect:from", () => rule(statements.name))
-    ).yields((r, y) => {
+    ).yields((r, y, f) => {
         const dialectname = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
         const dialectfrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
         return {
-            location: { index: r.tokens.first().result.startloc },
+            location: { index: r.tokens.first()!.result.startloc },
             type: "dialect",
-            raw: r.tokens.slice(0, 3).map(token => token.result.value).join(""),
+            raw: f,
             value: {
                 dialect: dialectname,
                 from: dialectfrom

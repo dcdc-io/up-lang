@@ -21,7 +21,10 @@ describe('parser', () => {
             location: { index: 0 },
             type: "comment",
             raw: "// hello world",
-            value: "hello world"
+            value: {
+                index: 3,
+                value: "hello world"
+            }
         }])
     })
 
@@ -64,12 +67,14 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse destructered names', () => {
+    fit('can parse destructered names', () => {
         let result = parse("{ foo { bar } }")(
             statements.destructuredNames
         )
 
         deleteProperty(result[0], "parent")
+
+        result // ?
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
@@ -80,7 +85,7 @@ describe('parser', () => {
                     "index": 2,
                 },
                 raw: "foo",
-                type: "destructuredName_name",
+                type: "name",
                 value: "foo",
             }, {
                 location: {
@@ -89,12 +94,12 @@ describe('parser', () => {
                 raw: "{ bar }",
                 type: "destructuredName",
                 value: [{
-                    "location": {
+                    location: {
                         "index": 8,
                     },
-                    "raw": "bar",
-                    "type": "destructuredName_name",
-                    "value": "bar",
+                    raw: "bar",
+                    type: "name",
+                    value: "bar",
                 }],
             }]
         }]
