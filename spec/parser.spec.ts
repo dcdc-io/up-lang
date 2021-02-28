@@ -68,18 +68,18 @@ describe('parser', () => {
     })
 
     fit('can parse destructered names', () => {
-        let result = parse("{ foo { bar } }")(
+        let result = parse("{ foo, foo { bar } }")(
             statements.destructuredNames
         )
 
         deleteProperty(result[0], "parent")
 
-        result // ?
+        result[0].value // ?
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "destructuredName",
-            raw: "{ foo { bar } }",
+            raw: "{ foo, foo { bar } }",
             value: [{
                 location: {
                     "index": 2,

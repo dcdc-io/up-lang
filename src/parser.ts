@@ -20,17 +20,17 @@ Array.prototype.first = function <T>(): T | undefined {
 }
 
 const flat = <T>(arr: Array<T>): T[] => {
-    return arr.reduce((acc, value) => acc.concat(value as any), [])
+    return arr.reduce((acc, value) => acc.concat(Array.isArray(value) ? flat(value) : value), [])
 }
 
 const tag = (tag: string, ruleToTag: () => IRule): IRule => {
     return rule(ruleToTag).yields((r, y) => {
-        return { tag, value: y }
+        return { tag, value: flat(y) }
     })
 }
 
 const firstTagged = (tag: string, y: any[]): any => {
-    return flat<any>(y.filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
+    return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
 }
 
 const tokens = {
@@ -126,64 +126,45 @@ export const statements = {
     destructuredNames: rule(
         tokens.WhitespaceAnyMultiline,
         tokens.LeftCurly,
-        tokens.WhitespaceAnyMultiline,
         either(
             rule(
-                tokens.NameOrIdentifier,
+                tag("name:first", () => rule(statements.name)),
                 tag("destructuredName:first", () => rule(statements.destructuredNames))
             ),
             rule(
-                tokens.NameOrIdentifier
+                tag("name:first", () => rule(statements.name))
             )
         ),
         many(
             tokens.WhitespaceAnyMultiline,
             tokens.Comma,
-            tokens.WhitespaceAnyMultiline,
             either(
                 rule(
-                    tokens.NameOrIdentifier,
+                    tag("name:other", () => rule(statements.name)),
                     tag("destructuredName:other", () => rule(statements.destructuredNames))
                 ),
                 rule(
-                    tokens.NameOrIdentifier
+                    tag("name:other", () => rule(statements.name)),
                 )
             )
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
     ).yields((r, y, f) => {
-        y // ?
-        //firstTagged("destructuredName:first", y) // ?
-        return r.tokens.reduce((previous: any, current, index) => {
-            switch (current.name) {
-                case "LeftCurly":
-                    const part = {
-                        location: { index: current.result.startloc },
-                        type: "destructuredName",
-                        value: [],
-                        raw: f.trim(),
-                        ...(() => previous ? { parent: previous } : undefined)()
-                    }
-                    if (previous) {
-                        previous.value.push(part)
-                    }
-                    return part
-                case "NameOrIdentifier":
-                    previous.value.push({
-                        location: { index: current.result.startloc },
-                        type: "name",
-                        value: current.result.value,
-                        raw: current.result.value,
-                        parent: previous
-                    })
-                    return previous
-                case "RightCurly":
-                    return previous.parent || previous
-                default:
-                    return previous
-            }
-        }, false)
+        if (y) {
+            firstTagged("name:first", y) // ?
+            firstTagged("destructuredName:first", y) // ?
+        }
+
+        return {
+            location: { index: r.tokens.first()?.result.startloc },
+            type: "destructuredName",
+            raw: f,
+            value: [
+                ...firstTagged("name:first", y).value,
+                ...(firstTagged("destructuredName:first", y) || { value: [] }).value
+            ]
+        }
     }),
     stringLiteral: rule(
         tokens.WhitespaceAnyMultiline,
