@@ -33,7 +33,7 @@ const firstTagged = (tag: string, y: any[]): any => {
     return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
 }
 
-const tokens = {
+export const tokens = {
     WhitespaceAny: token("WhitespaceAny", /\s*/),
     WhitespaceAnyMultiline: token("WhitespaceAnyMultiline", /\s*/m),
     UntilEndOfLine: token("UntilEndOfLine", /.*$/m),
@@ -56,11 +56,9 @@ type Comment = {
 
 export const statements = {
     statement: rule(
-        tokens.WhitespaceAnyMultiline,
         () => statements.comment
     ),
     comment: rule(
-        tokens.WhitespaceAnyMultiline,
         tokens.CommentStart,
         tokens.WhitespaceAny,
         tokens.UntilEndOfLine
@@ -73,7 +71,6 @@ export const statements = {
         }
     }),
     import: rule(
-        tokens.WhitespaceAnyMultiline,
         tokens.Import,
         either(
             tag("import:name", () => rule(statements.name)),
@@ -83,13 +80,13 @@ export const statements = {
         tokens.From,
         tokens.WhitespaceAnyMultiline,
         tag("import:libname", () => rule(statements.stringLiteral))
-    ).yields((r, y) => {
+    ).yields((r, y, f) => {
         const names = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
         const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
         return {
             location: { index: 0 },
             type: "import",
-            raw: r.tokens.slice(0, 3).map(token => token.result.value).join("") + names.raw + r.tokens.slice(2).map(token => token.result.value).join("") + libname.raw,
+            raw: f.trim(),
             value: {
                 import: names,
                 source: libname
@@ -97,7 +94,6 @@ export const statements = {
         }
     }),
     name: rule(
-        tokens.WhitespaceAnyMultiline,
         tokens.NameOrIdentifier,
         optional(
             many(
@@ -124,8 +120,8 @@ export const statements = {
         }
     }),
     destructuredNames: rule(
-        tokens.WhitespaceAnyMultiline,
         tokens.LeftCurly,
+        tokens.WhitespaceAnyMultiline,
         either(
             rule(
                 tag("name:first", () => rule(statements.name)),
@@ -159,7 +155,7 @@ export const statements = {
         return {
             location: { index: r.tokens.first()?.result.startloc },
             type: "destructuredName",
-            raw: f,
+            raw: f.trim(),
             value: [
                 ...firstTagged("name:first", y).value,
                 ...(firstTagged("destructuredName:first", y) || { value: [] }).value

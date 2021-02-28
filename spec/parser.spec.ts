@@ -1,5 +1,7 @@
 import { Tibu } from "tibu"
-import { statements } from '../src/parser';
+import { statements, tokens } from '../src/parser';
+
+const { rule } = Tibu
 
 const parse = code => (...rules: Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
 
@@ -67,11 +69,11 @@ describe('parser', () => {
         }])
     })
 
-    fit('can parse destructered names', () => {
+    it('can parse destructered names', () => {
         let result = parse("{ foo, foo { bar } }")(
             statements.destructuredNames
         )
-
+result //?
         deleteProperty(result[0], "parent")
 
         result[0].value // ?
@@ -120,6 +122,7 @@ describe('parser', () => {
 
     it('can parse import statements', () => {
         let result = parse("import { foo } from 'bar'")(
+            rule(tokens.WhitespaceAnyMultiline),
             statements.import
         )
 
