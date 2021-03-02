@@ -196,8 +196,13 @@ describe('parser', () => {
                             "index": 10,
                         },
                         raw: "dockerfile",
-                        type: "destructuredName_name",
-                        value: "dockerfile",
+                        type: "name",
+                        value: [{
+                            location: { index: 10 },
+                            type: "name_part",
+                            raw: "dockerfile",
+                            value: "dockerfile"
+                        }],
                     }]
                 },
                 from: {

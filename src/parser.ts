@@ -191,12 +191,14 @@ export const statements = {
     }),
     dialect: rule(
         tokens.Dialect,
+        tokens.WhitespaceAnyMultiline,
         either(
             tag("dialect:name", () => rule(statements.name)),
             tag("dialect:name", () => rule(statements.destructuredNames))
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.From,
+        tokens.WhitespaceAnyMultiline,
         tag("dialect:from", () => rule(statements.name))
     ).yields((r, y, f, { start }) => {
         const dialectname = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
