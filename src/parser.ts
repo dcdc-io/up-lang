@@ -85,12 +85,12 @@ export const statements = {
         tokens.From,
         tokens.WhitespaceAnyMultiline,
         tag("import:libname", () => rule(statements.stringLiteral))
-    ).yields((r, y, f) => {
+    ).yields((r, y, f, { start }) => {
         const names = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
         names // ?
         const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
         return {
-            location: { index: 0 },
+            location: { index: start },
             type: "import",
             raw: f.trim(),
             value: {
@@ -157,13 +157,13 @@ export const statements = {
         tokens.RightCurly
     ).yields((r, y, f) => {
         //if (y) {
-            const firstDestructured = firstTagged("first:destructured", y) // ?
-            const firstNormal = firstTagged("first:normal", y) // ?
-            const otherDestructured = allTagged("other:destructured", y) // ?
-            const otherNormal = allTagged("other:normal", y) // ?
+        const firstDestructured = firstTagged("first:destructured", y) // ?
+        const firstNormal = firstTagged("first:normal", y) // ?
+        const otherDestructured = allTagged("other:destructured", y) // ?
+        const otherNormal = allTagged("other:normal", y) // ?
         //}
 
-        otherNormal.map(o=>o.value).flat() // ?
+        otherNormal.map(o => o.value).flat() // ?
 
         return {
             location: { index: r.tokens.first()?.result.startloc },
@@ -172,8 +172,8 @@ export const statements = {
             value: [
                 ...(firstNormal ? firstNormal.value : []).map(o => o.value).flat(),
                 ...(firstDestructured ? firstDestructured.value : []).map(o => o.value).flat(),
-                ...(otherNormal.length ? otherNormal.map((o:any) => o.value).flat() : []).map(o => o.value).flat(),
-                ...(otherDestructured.length ? otherDestructured.map((o:any) => o.value).flat() : []).map(o => o.value).flat(),
+                ...(otherNormal.length ? otherNormal.map((o: any) => o.value).flat() : []).map(o => o.value).flat(),
+                ...(otherDestructured.length ? otherDestructured.map((o: any) => o.value).flat() : []).map(o => o.value).flat(),
             ]
         }
     }),
@@ -190,7 +190,6 @@ export const statements = {
         }
     }),
     dialect: rule(
-        tokens.WhitespaceAnyMultiline,
         tokens.Dialect,
         either(
             tag("dialect:name", () => rule(statements.name)),
@@ -199,11 +198,11 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tokens.From,
         tag("dialect:from", () => rule(statements.name))
-    ).yields((r, y, f) => {
+    ).yields((r, y, f, { start }) => {
         const dialectname = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
         const dialectfrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
         return {
-            location: { index: r.tokens.first()!.result.startloc },
+            location: { index: start },
             type: "dialect",
             raw: f,
             value: {

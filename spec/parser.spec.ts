@@ -137,7 +137,7 @@ describe('parser', () => {
         }])
     })
 
-    fit('can parse import statements', () => {
+    it('can parse import statements', () => {
         let result = parse("import { foo } from 'bar'")(
             statements.import
         )
