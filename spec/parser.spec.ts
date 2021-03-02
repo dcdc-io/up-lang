@@ -219,4 +219,48 @@ describe('parser', () => {
             }
         }])
     })
+
+    fit('can parse typed names', () => {
+        const result = parse("asset<dockerImageAsset> site")(
+            statements.typedName
+        )
+
+        expect(result).toStrictEqual([{
+            location: { index: 0 },
+            type: "typedName",
+            raw: "asset<dockerImageAsset> site",
+            value: {
+                type: {
+                    location: { index: 0 },
+                    type: "typeReference",
+                    raw: "asset<dockerImageAsset>",
+                    value: {
+                        base: "asset",
+                        arrayParameters: [],
+                        genericParameters: [{
+                            location: { index: 6 },
+                            type: "typeReference",
+                            raw: "dockerImageAsset",
+                            value: {
+                                base: "dockerImageAsset",
+                                arrayParameters: [],
+                                genericParameters: []
+                            }
+                        }]
+                    }
+                },
+                name: {
+                    location: { index: 24 },
+                    type: "name",
+                    raw: "site",
+                    value: [{
+                        location: { index: 24 },
+                        type: "name_part",
+                        raw: "site",
+                        value: "site"
+                    }]
+                }
+            }
+        }])
+    })
 })

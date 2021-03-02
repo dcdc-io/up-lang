@@ -212,7 +212,35 @@ export const statements = {
                 from: dialectfrom
             }
         }
-    })
+    }),
+    typeReference: rule(
+        () => statements.name,
+        optional(
+            tokens.WhitespaceAnyMultiline,
+            tokens.LeftAngle,
+            tokens.WhitespaceAnyMultiline,
+            () => statements.typeReference,
+            tokens.WhitespaceAnyMultiline,
+            many(
+                tokens.Comma,
+                tokens.WhitespaceAnyMultiline,
+                () => statements.typeReference
+            ),
+            tokens.RightAngle,
+        ),
+        many(
+            tokens.WhitespaceAnyMultiline,
+            tokens.LeftSquare,
+            tokens.WhitespaceAnyMultiline,
+            tokens.RightSquare
+        )
+
+    ),
+    typedName: rule(
+        () => statements.typeReference,
+        tokens.WhitespaceAnyMultiline,
+        () => statements.name
+    )
 }
 
 // export const parse = (code: string) => {

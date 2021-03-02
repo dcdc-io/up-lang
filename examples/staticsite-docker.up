@@ -1,5 +1,5 @@
-// import { docker, dockerImageAsset } from "@up-sdk/provider-docker"
-// dialect { dockerfile } from docker
+import { docker, dockerImageAsset } from "@up-sdk/provider-docker"
+dialect { dockerfile } from docker
 
 // asset<dockerImageAsset> site
 
