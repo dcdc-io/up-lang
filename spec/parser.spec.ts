@@ -225,6 +225,8 @@ describe('parser', () => {
             statements.typedName
         )
 
+        result // ?
+
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "typedName",
@@ -235,14 +237,34 @@ describe('parser', () => {
                     type: "typeReference",
                     raw: "asset<dockerImageAsset>",
                     value: {
-                        base: "asset",
+                        base: {
+                            location: { index: 0 },
+                            type: "name",
+                            raw: "asset",
+                            value: [{
+                                location: { index: 0 },
+                                type: "name_part",
+                                raw: "asset",
+                                value: "asset"
+                            }]
+                        },
                         arrayParameters: [],
                         genericParameters: [{
                             location: { index: 6 },
                             type: "typeReference",
                             raw: "dockerImageAsset",
                             value: {
-                                base: "dockerImageAsset",
+                                base: {
+                                    location: { index: 6 },
+                                    type: "name",
+                                    raw: "dockerImageAsset",
+                                    value: [{
+                                        location: { index: 6 },
+                                        type: "name_part",
+                                        raw: "dockerImageAsset",
+                                        value: "dockerImageAsset"
+                                    }]
+                                },
                                 arrayParameters: [],
                                 genericParameters: []
                             }

@@ -45,10 +45,14 @@ export const tokens = {
     Import: token("Import", "import"),
     Dialect: token("Dialect", "dialect"),
     From: token("From", "from"),
-    NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/),
+    NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/i),
     Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/),
     LeftCurly: token("LeftCurly", "{"),
     RightCurly: token("RightCurly", "}"),
+    LeftAngle: token("LeftAngle", "<"),
+    RightAngle: token("RightAngle", ">"),
+    LeftSquare: token("LeftSquare", "{"),
+    RightSquare: token("RightSquare", "}"),
     Comma: token("Comma", ","),
     Colon: token("Colon", ":"),
     Dot: token("Dot", ".")
@@ -214,19 +218,22 @@ export const statements = {
         }
     }),
     typeReference: rule(
-        () => statements.name,
+        tag("typeReference:name", () => rule(statements.name)),
         optional(
-            tokens.WhitespaceAnyMultiline,
-            tokens.LeftAngle,
-            tokens.WhitespaceAnyMultiline,
-            () => statements.typeReference,
-            tokens.WhitespaceAnyMultiline,
-            many(
-                tokens.Comma,
+            tag("typeReference:generic", () => rule(
                 tokens.WhitespaceAnyMultiline,
-                () => statements.typeReference
-            ),
-            tokens.RightAngle,
+                tokens.LeftAngle,
+                tokens.WhitespaceAnyMultiline,
+                () => statements.typeReference,
+                tokens.WhitespaceAnyMultiline,
+                many(
+                    tokens.Comma,
+                    tokens.WhitespaceAnyMultiline,
+                    () => statements.typeReference,
+                    tokens.WhitespaceAnyMultiline
+                ),
+                tokens.RightAngle,
+            ))
         ),
         many(
             tokens.WhitespaceAnyMultiline,
@@ -234,13 +241,37 @@ export const statements = {
             tokens.WhitespaceAnyMultiline,
             tokens.RightSquare
         )
+    ).yields((r, y, f, { start }) => {
+        const name = firstTagged("typeReference:name", y).value.flat().first()
+        const generic = allTagged("typeReference:generic", y).flat().map(o => o.value).flat()
 
-    ),
+        return {
+            location: { index: start },
+            type: "typeReference",
+            raw: f,
+            value: {
+                base: name,
+                arrayParameters: [],
+                genericParameters: generic
+            }
+        }
+    }),
     typedName: rule(
-        () => statements.typeReference,
+        tag("typedName:typeReference", () => statements.typeReference),
         tokens.WhitespaceAnyMultiline,
-        () => statements.name
-    )
+        tag("typedName:name", () => statements.name)
+    ).yields((r, y, f, { start }) => {
+        firstTagged("typedName:typeReference", y).value.flat().first() // ?
+        return {
+            location: { index: start },
+            type: "typedName",
+            raw: f,
+            value: {
+                type: firstTagged("typedName:typeReference", y).value.flat().first(),
+                name: firstTagged("typedName:name", y).value.flat().first()
+            }
+        }
+    })
 }
 
 // export const parse = (code: string) => {
