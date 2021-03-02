@@ -69,7 +69,7 @@ describe('parser', () => {
         }])
     })
 
-    fit('can parse destructered names', () => {
+    it('can parse destructered names', () => {
         let result = parse("{ foo, bar { foo } }")(
             statements.destructuredNames
         )
@@ -137,9 +137,8 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse import statements', () => {
+    fit('can parse import statements', () => {
         let result = parse("import { foo } from 'bar'")(
-            rule(tokens.WhitespaceAnyMultiline),
             statements.import
         )
 
@@ -156,9 +155,14 @@ describe('parser', () => {
                     raw: "{ foo }",
                     value: [{
                         location: { index: 9 },
-                        type: "destructuredName_name",
+                        type: "name",
                         raw: "foo",
-                        value: "foo"
+                        value: [{
+                            location: { index: 9 },
+                            raw: "foo",
+                            type: "name_part",
+                            value: "foo"
+                        }]
                     }]
                 },
                 source: {

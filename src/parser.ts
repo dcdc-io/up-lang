@@ -76,6 +76,7 @@ export const statements = {
     }),
     import: rule(
         tokens.Import,
+        tokens.WhitespaceAnyMultiline,
         either(
             tag("import:name", () => rule(statements.name)),
             tag("import:name", () => rule(statements.destructuredNames))
@@ -86,6 +87,7 @@ export const statements = {
         tag("import:libname", () => rule(statements.stringLiteral))
     ).yields((r, y, f) => {
         const names = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
+        names // ?
         const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
         return {
             location: { index: 0 },
