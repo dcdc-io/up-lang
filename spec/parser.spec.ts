@@ -126,14 +126,14 @@ describe('parser', () => {
     })
 
     it('can parse string literals', () => {
-        const result = parse("'he\\tllo'")(
+        const result = parse("'he\\tha'")(
             statements.stringLiteral
         )
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "string",
-            raw: "'he\\tllo'",
-            value: "he\tllo"
+            raw: "'he\\tha'",
+            value: "he\tha"
         }])
     })
 

@@ -87,18 +87,17 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tokens.From,
         tokens.WhitespaceAnyMultiline,
-        tag("import:libname", () => rule(statements.stringLiteral))
+        tag("import:libraryName", () => rule(statements.stringLiteral))
     ).yields((r, y, f, { start }) => {
-        const names = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
-        names // ?
-        const libname = flat<{ raw: string }>(firstTagged("import:libname", y).value).first()
+        const name = flat<{ raw: string }>(firstTagged("import:name", y).value).first()
+        const libraryName = flat<{ raw: string }>(firstTagged("import:libraryName", y).value).first()
         return {
             location: { index: start },
             type: "import",
             raw: f.trim(),
             value: {
-                import: names,
-                source: libname
+                import: name,
+                source: libraryName
             }
         }
     }),
@@ -112,7 +111,7 @@ export const statements = {
                 tokens.NameOrIdentifier
             )
         )
-    ).yields((r, y) => {
+    ).yields((r, y, f, {start}) => {
         const parts = r.tokens.filter(token => token.name === "NameOrIdentifier").map(token => {
             return {
                 location: { index: token.result.startloc },
@@ -200,15 +199,15 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         tag("dialect:from", () => rule(statements.name))
     ).yields((r, y, f, { start }) => {
-        const dialectname = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
-        const dialectfrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
+        const dialectName = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
+        const dialectFrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
         return {
             location: { index: start },
             type: "dialect",
             raw: f,
             value: {
-                dialect: dialectname,
-                from: dialectfrom
+                dialect: dialectName,
+                from: dialectFrom
             }
         }
     }),
