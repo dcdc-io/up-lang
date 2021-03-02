@@ -29,6 +29,10 @@ const tag = (tag: string, ruleToTag: () => IRule): IRule => {
     })
 }
 
+const allTagged = (tag: string, y: any[]): any => {
+    return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).filter(x => x.tag === tag)
+}
+
 const firstTagged = (tag: string, y: any[]): any => {
     return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
 }
@@ -123,42 +127,51 @@ export const statements = {
         tokens.LeftCurly,
         tokens.WhitespaceAnyMultiline,
         either(
-            rule(
-                tag("name:first", () => rule(statements.name)),
-                tag("destructuredName:first", () => rule(statements.destructuredNames))
-            ),
-            rule(
-                tag("name:first", () => rule(statements.name))
-            )
+            tag("first:destructured", () => rule(
+                tag("name", () => rule(statements.name)),
+                tokens.WhitespaceAnyMultiline,
+                tag("destructuredName", () => rule(statements.destructuredNames))
+            )),
+            tag("first:normal", () => rule(
+                tag("name", () => rule(statements.name))
+            ))
         ),
         many(
             tokens.WhitespaceAnyMultiline,
             tokens.Comma,
+            tokens.WhitespaceAnyMultiline,
             either(
-                rule(
-                    tag("name:other", () => rule(statements.name)),
-                    tag("destructuredName:other", () => rule(statements.destructuredNames))
-                ),
-                rule(
-                    tag("name:other", () => rule(statements.name)),
-                )
+                tag("other:destructured", () => rule(
+                    tag("name", () => rule(statements.name)),
+                    tokens.WhitespaceAnyMultiline,
+                    tag("destructuredName", () => rule(statements.destructuredNames))
+                )),
+                tag("other:normal", () => rule(
+                    tag("name", () => rule(statements.name)),
+                ))
             )
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
     ).yields((r, y, f) => {
-        if (y) {
-            firstTagged("name:first", y) // ?
-            firstTagged("destructuredName:first", y) // ?
-        }
+        //if (y) {
+            const firstDestructured = firstTagged("first:destructured", y) // ?
+            const firstNormal = firstTagged("first:normal", y) // ?
+            const otherDestructured = allTagged("other:destructured", y) // ?
+            const otherNormal = allTagged("other:normal", y) // ?
+        //}
+
+        otherNormal.map(o=>o.value).flat() // ?
 
         return {
             location: { index: r.tokens.first()?.result.startloc },
             type: "destructuredName",
             raw: f.trim(),
             value: [
-                ...firstTagged("name:first", y).value,
-                ...(firstTagged("destructuredName:first", y) || { value: [] }).value
+                ...(firstNormal ? firstNormal.value : []).map(o => o.value).flat(),
+                ...(firstDestructured ? firstDestructured.value : []).map(o => o.value).flat(),
+                ...(otherNormal.length ? otherNormal.map((o:any) => o.value).flat() : []).map(o => o.value).flat(),
+                ...(otherDestructured.length ? otherDestructured.map((o:any) => o.value).flat() : []).map(o => o.value).flat(),
             ]
         }
     }),

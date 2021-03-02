@@ -69,43 +69,60 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse destructered names', () => {
-        let result = parse("{ foo, foo { bar } }")(
+    fit('can parse destructered names', () => {
+        let result = parse("{ foo, bar { foo } }")(
             statements.destructuredNames
         )
-result //?
+        result // ?
         deleteProperty(result[0], "parent")
-
-        result[0].value // ?
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
             type: "destructuredName",
-            raw: "{ foo, foo { bar } }",
+            raw: "{ foo, bar { foo } }",
             value: [{
                 location: {
                     "index": 2,
                 },
                 raw: "foo",
                 type: "name",
-                value: "foo",
+                value: [{
+                    location: { index: 2 },
+                    raw: "foo",
+                    type: "name_part",
+                    value: "foo"
+                }],
             }, {
                 location: {
-                    index: 6,
+                    "index": 7,
                 },
-                raw: "{ bar }",
+                raw: "bar",
+                type: "name",
+                value: [{
+                    location: { index: 7 },
+                    raw: "bar",
+                    type: "name_part",
+                    value: "bar"
+                }],
+            }, {
+                location: { index: 11 },
                 type: "destructuredName",
+                raw: "{ foo }",
                 value: [{
                     location: {
-                        "index": 8,
+                        "index": 13,
                     },
-                    raw: "bar",
+                    raw: "foo",
                     type: "name",
-                    value: "bar",
-                }],
+                    value: [{
+                        location: { index: 13 },
+                        raw: "foo",
+                        type: "name_part",
+                        value: "foo"
+                    }],
+                }]
             }]
-        }]
-        )
+        }])
     })
 
     it('can parse string literals', () => {
