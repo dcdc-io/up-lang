@@ -1,5 +1,4 @@
 import { Input, IRule, Result, Tibu } from "tibu"
-import { flattenDiagnosticMessageText } from "typescript";
 import { unesc } from "./utility";
 
 const { parse: tibu, rule, many, either, all, optional, token } = Tibu
@@ -29,11 +28,11 @@ const tag = (tag: string, ruleToTag: () => IRule): IRule => {
     })
 }
 
-const allTagged = (tag: string, y: any[]): any => {
+const allTagged = (tag: string, y: any[]): { tag: string, value: any[] }[] => {
     return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).filter(x => x.tag === tag)
 }
 
-const firstTagged = (tag: string, y: any[]): any => {
+const firstTagged = (tag: string, y: any[]): { tag: string, value: any[] } => {
     return flat<any>(flat(y).filter(x => x).filter(x => x.tag)).find(x => x.tag === tag)
 }
 
@@ -70,9 +69,9 @@ export const statements = {
         tokens.CommentStart,
         tokens.WhitespaceAny,
         tokens.UntilEndOfLine
-    ).yields((r, y, f) => {
+    ).yields((r, y, f, { start }) => {
         return {
-            location: { index: r.tokens[0].result.startloc },
+            location: { index: start },
             type: "comment",
             value: r.one("UntilEndOfLine"),
             raw: f.trim() // r.tokens.map(t => t.result.value).join("")
@@ -83,7 +82,7 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         either(
             tag("import:name", () => rule(statements.name)),
-            tag("import:name", () => rule(statements.destructuredNames))
+            tag("import:name", () => rule(statements.destructuringNames))
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.From,
@@ -129,14 +128,14 @@ export const statements = {
             value: parts
         }
     }),
-    destructuredNames: rule(
+    destructuringNames: rule(
         tokens.LeftCurly,
         tokens.WhitespaceAnyMultiline,
         either(
-            tag("first:destructured", () => rule(
+            tag("first:destructuring", () => rule(
                 tag("name", () => rule(statements.name)),
                 tokens.WhitespaceAnyMultiline,
-                tag("destructuredName", () => rule(statements.destructuredNames))
+                tag("destructuringName", () => rule(statements.destructuringNames))
             )),
             tag("first:normal", () => rule(
                 tag("name", () => rule(statements.name))
@@ -147,10 +146,10 @@ export const statements = {
             tokens.Comma,
             tokens.WhitespaceAnyMultiline,
             either(
-                tag("other:destructured", () => rule(
+                tag("other:destructuring", () => rule(
                     tag("name", () => rule(statements.name)),
                     tokens.WhitespaceAnyMultiline,
-                    tag("destructuredName", () => rule(statements.destructuredNames))
+                    tag("destructuringName", () => rule(statements.destructuringNames))
                 )),
                 tag("other:normal", () => rule(
                     tag("name", () => rule(statements.name)),
@@ -159,25 +158,21 @@ export const statements = {
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.RightCurly
-    ).yields((r, y, f) => {
-        //if (y) {
-        const firstDestructured = firstTagged("first:destructured", y) // ?
-        const firstNormal = firstTagged("first:normal", y) // ?
-        const otherDestructured = allTagged("other:destructured", y) // ?
-        const otherNormal = allTagged("other:normal", y) // ?
-        //}
-
-        otherNormal.map(o => o.value).flat() // ?
+    ).yields((r, y, f, { start }) => {
+        const firstDestructuring = firstTagged("first:destructuring", y)
+        const firstNormal = firstTagged("first:normal", y)
+        const otherDestructuring = allTagged("other:destructuring", y)
+        const otherNormal = allTagged("other:normal", y)
 
         return {
-            location: { index: r.tokens.first()?.result.startloc },
-            type: "destructuredName",
+            location: { index: start },
+            type: "destructuringName",
             raw: f.trim(),
             value: [
                 ...(firstNormal ? firstNormal.value : []).map(o => o.value).flat(),
-                ...(firstDestructured ? firstDestructured.value : []).map(o => o.value).flat(),
+                ...(firstDestructuring ? firstDestructuring.value : []).map(o => o.value).flat(),
                 ...(otherNormal.length ? otherNormal.map((o: any) => o.value).flat() : []).map(o => o.value).flat(),
-                ...(otherDestructured.length ? otherDestructured.map((o: any) => o.value).flat() : []).map(o => o.value).flat(),
+                ...(otherDestructuring.length ? otherDestructuring.map((o: any) => o.value).flat() : []).map(o => o.value).flat(),
             ]
         }
     }),
@@ -198,7 +193,7 @@ export const statements = {
         tokens.WhitespaceAnyMultiline,
         either(
             tag("dialect:name", () => rule(statements.name)),
-            tag("dialect:name", () => rule(statements.destructuredNames))
+            tag("dialect:name", () => rule(statements.destructuringNames))
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.From,

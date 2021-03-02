@@ -3,7 +3,7 @@ import { statements, tokens } from '../src/parser';
 
 const { rule } = Tibu
 
-const parse = code => (...rules: Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
+const parse = (code: string) => (...rules: Parameters<ReturnType<typeof Tibu.parse>>) => Tibu.parse(code)(...rules)
 
 const deleteProperty = (obj: any, removeKey: string): any => {
     delete obj[removeKey]
@@ -69,16 +69,16 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse destructered names', () => {
+    it('can parse destructuring names', () => {
         let result = parse("{ foo, bar { foo } }")(
-            statements.destructuredNames
+            statements.destructuringNames
         )
         result // ?
         deleteProperty(result[0], "parent")
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
-            type: "destructuredName",
+            type: "destructuringName",
             raw: "{ foo, bar { foo } }",
             value: [{
                 location: {
@@ -106,7 +106,7 @@ describe('parser', () => {
                 }],
             }, {
                 location: { index: 11 },
-                type: "destructuredName",
+                type: "destructuringName",
                 raw: "{ foo }",
                 value: [{
                     location: {
@@ -151,7 +151,7 @@ describe('parser', () => {
             value: {
                 import: {
                     location: { index: 7 },
-                    type: "destructuredName",
+                    type: "destructuringName",
                     raw: "{ foo }",
                     value: [{
                         location: { index: 9 },
@@ -189,7 +189,7 @@ describe('parser', () => {
             value: {
                 dialect: {
                     location: { index: 8 },
-                    type: "destructuredName",
+                    type: "destructuringName",
                     raw: "{ dockerfile }",
                     value: [{
                         location: {
@@ -220,7 +220,7 @@ describe('parser', () => {
         }])
     })
 
-    fit('can parse typed names', () => {
+    it('can parse typed names', () => {
         const result = parse("asset<dockerImageAsset> site")(
             statements.typedName
         )

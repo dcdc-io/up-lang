@@ -18,7 +18,7 @@
  */
 const jsEscapeRegex = /\\(u\{([0-9A-Fa-f]+)\}|u([0-9A-Fa-f]{4})|x([0-9A-Fa-f]{2})|([1-7][0-7]{0,2}|[0-7]{2,3})|(['"tbrnfv0\\]))|\\U([0-9A-Fa-f]{8})/g;
 
-const usualEscapeSequences = {
+const usualEscapeSequences: Record<string, string> = {
     '0': '\0',
     'b': '\b',
     'f': '\f',
@@ -31,11 +31,11 @@ const usualEscapeSequences = {
     '\\': '\\'
 };
 
-const fromHex = (str) => String.fromCodePoint(parseInt(str, 16));
-const fromOct = (str) => String.fromCodePoint(parseInt(str, 8));
+const fromHex = (str: string) => String.fromCodePoint(parseInt(str, 16));
+const fromOct = (str: string) => String.fromCodePoint(parseInt(str, 8));
 
-export const unesc = (string) => {
-    return string.replace(jsEscapeRegex, (_, __, varHex, longHex, shortHex, octal, specialCharacter, python) => {
+export const unesc = (str: string) => {
+    return str.replace(jsEscapeRegex, (_, __, varHex, longHex, shortHex, octal, specialCharacter, python) => {
         if (varHex !== undefined) {
             return fromHex(varHex);
         } else if (longHex !== undefined) {
