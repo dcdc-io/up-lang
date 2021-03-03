@@ -1,5 +1,5 @@
 import { docker, dockerImageAsset } from "@up-sdk/provider-docker"
-dialect { dockerfile } from docker
+language { dockerfile } from docker
 
 // asset<dockerImageAsset> site
 
@@ -17,11 +17,11 @@ dialect { dockerfile } from docker
 
 // // lifecycle events
 // :up = context => {
-//     site = dockerfile {
+//     site = dockerfile <[
 //         FROM nginx:alpine
 //         
 //         COPY ./staticsite /usr/share/nginx/html
-//     }   |> output = docker.build
+//     ]>  |> output = docker.build
 //         |> docker.saveImage output.image, env.DOCKER_OUT_FILE or nothing
 //         |> docker.assetFromLocalImage output.image
 //     

@@ -42,7 +42,7 @@ export const tokens = {
     UntilEndOfLine: token("UntilEndOfLine", /.*$/m),
     CommentStart: token("CommentStart", "//"),
     Import: token("Import", "import"),
-    Dialect: token("Dialect", "dialect"),
+    Language: token("Language", "language"),
     From: token("From", "from"),
     NameOrIdentifier: token("NameOrIdentifier", /[a-z_@$]+[a-z_@$0-9]*/i),
     Quoted: token("Quoted", /(['"])(?:(?!\1|\\).|\\.)*\1/),
@@ -187,27 +187,27 @@ export const statements = {
             value: unesc(token.result.value.substr(1, token.result.value.length - 2))
         }
     }),
-    dialect: rule(
-        tokens.Dialect,
+    language: rule(
+        tokens.Language,
         tokens.WhitespaceAnyMultiline,
         either(
-            tag("dialect:name", () => rule(statements.name)),
-            tag("dialect:name", () => rule(statements.destructuringNames))
+            tag("language:name", () => rule(statements.name)),
+            tag("language:name", () => rule(statements.destructuringNames))
         ),
         tokens.WhitespaceAnyMultiline,
         tokens.From,
         tokens.WhitespaceAnyMultiline,
-        tag("dialect:from", () => rule(statements.name))
+        tag("language:from", () => rule(statements.name))
     ).yields((r, y, f, { start }) => {
-        const dialectName = flat<{ raw: string }>(firstTagged("dialect:name", y).value).first()
-        const dialectFrom = flat<{ raw: string }>(firstTagged("dialect:from", y).value).first()
+        const languageName = flat<{ raw: string }>(firstTagged("language:name", y).value).first()
+        const languageFrom = flat<{ raw: string }>(firstTagged("language:from", y).value).first()
         return {
             location: { index: start },
-            type: "dialect",
+            type: "language",
             raw: f,
             value: {
-                dialect: dialectName,
-                from: dialectFrom
+                language: languageName,
+                from: languageFrom
             }
         }
     }),

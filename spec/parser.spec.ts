@@ -73,7 +73,6 @@ describe('parser', () => {
         let result = parse("{ foo, bar { foo } }")(
             statements.destructuringNames
         )
-        result // ?
         deleteProperty(result[0], "parent")
 
         expect(result).toStrictEqual([{
@@ -175,30 +174,30 @@ describe('parser', () => {
         }])
     })
 
-    it('can parse dialect statements', () => {
-        let result = parse("dialect { dockerfile } from docker")(
-            statements.dialect
+    it('can parse language statements', () => {
+        let result = parse("language { dockerfile } from docker")(
+            statements.language
         )
 
         deleteProperty(result, "parent")
 
         expect(result).toStrictEqual([{
             location: { index: 0 },
-            type: "dialect",
-            raw: "dialect { dockerfile } from docker",
+            type: "language",
+            raw: "language { dockerfile } from docker",
             value: {
-                dialect: {
-                    location: { index: 8 },
+                language: {
+                    location: { index: 9 },
                     type: "destructuringName",
                     raw: "{ dockerfile }",
                     value: [{
                         location: {
-                            "index": 10,
+                            "index": 11,
                         },
                         raw: "dockerfile",
                         type: "name",
                         value: [{
-                            location: { index: 10 },
+                            location: { index: 11 },
                             type: "name_part",
                             raw: "dockerfile",
                             value: "dockerfile"
@@ -206,11 +205,11 @@ describe('parser', () => {
                     }]
                 },
                 from: {
-                    location: { index: 28 },
+                    location: { index: 29 },
                     type: "name",
                     raw: "docker",
                     value: [{
-                        location: { index: 28 },
+                        location: { index: 29 },
                         type: "name_part",
                         raw: "docker",
                         value: "docker",
